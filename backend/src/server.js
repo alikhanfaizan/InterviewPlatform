@@ -1,24 +1,33 @@
-import express from 'express';
-import { ENV } from './lib/env.js';
-import path from 'path';
+import express from "express";
+import { ENV } from "./lib/env.js";
+import path from "path";
+import { connectDB } from "./lib/db.js";
 const app = express();
 
 const __dirname = path.resolve();
 
-app.get('/health', (req, res) => {
+app.get("/health", (req, res) => {
   res.status(200).send("API is working");
 });
-app.get('/books', (req, res) => {
+app.get("/books", (req, res) => {
   res.status(200).send("List of books");
 });
 
-
-if(ENV.NODE_ENV === 'production') {
+if (ENV.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
-  app.get('/{*any}', (req, res) => {
+  app.get("/{*any}", (req, res) => {
     res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
   });
 }
-app.listen(ENV.PORT, () => {
-  console.log(`Server is running on port ${ENV.PORT}`);
-});
+
+const startServer = async () => {
+  try {
+    await connectDB();
+    app.listen(ENV.PORT, () => {
+      console.log(`Server is running on port ${ENV.PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to connect to the Server:", error);
+  }
+};
+startServer();
