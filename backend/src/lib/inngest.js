@@ -1,35 +1,41 @@
-import {Inngest} from "inngest";
+import { Inngest } from "inngest";
 import User from "../models/User.js";
 import { connectDB } from "./db.js";
+import { deleteStreamUser, upsertStreamUser } from "./stream.js";
 
 export const inngest = new Inngest({ id: "my-INterviewPrep" });
 const syncUserData = inngest.createFunction(
-   {id: "sync-user"},
-   { event: "clerk/user.created" },
-    async ({ event }) => {
-        await connectDB();
-        const {id,email_addresses,first_name,last_name,image_url}=event.data;
-        const newUser = {
-            clerkId: id,
-            email: email_addresses[0]?.email_address ,
-            name: `${first_name || ""} ${last_name || ""}`,
-            profileImage: image_url,
-        }
-        await User.create(newUser);
-        console.log("User synced to DB:", newUser);
-    }
-
-)
+  { id: "sync-user" },
+  { event: "clerk/user.created" },
+  async ({ event }) => {
+    await connectDB();
+    const { id, email_addresses, first_name, last_name, image_url } =
+      event.data;
+    const newUser = {
+      clerkId: id,
+      email: email_addresses[0]?.email_address,
+      name: `${first_name || ""} ${last_name || ""}`,
+      profileImage: image_url,
+    };
+    await User.create(newUser);
+    await upsertStreamUser({
+      id: newUser.clerkId.to_string(),
+      name: newUser.name,
+      image: newUser.profileImage,
+    });
+    console.log("User synced to DB:", newUser);
+  }
+);
 const deleteUserFromDb = inngest.createFunction(
-   {id: "delete-user-from-db"},
-   { event: "clerk/user.deleted" },
-    async ({ event, step }) => {
-        await connectDB();
-        const {id}=event.data;
-        
-        await User.deleteOne({clerkId:id});
-        // console.log("User synced to DB:", newUser);
-    }
+  { id: "delete-user-from-db" },
+  { event: "clerk/user.deleted" },
+  async ({ event, step }) => {
+    await connectDB();
+    const { id } = event.data;
 
-)
-export const functions = [ syncUserData , deleteUserFromDb];
+    await User.deleteOne({ clerkId: id });
+    await deleteStreamUser(id.toString());
+    // console.log("User synced to DB:", newUser);
+  }
+);
+export const functions = [syncUserData, deleteUserFromDb];
