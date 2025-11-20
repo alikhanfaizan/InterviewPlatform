@@ -5,8 +5,9 @@ import { connectDB } from "./lib/db.js";
 import cors from "cors";
 import {serve} from "inngest/express";
 import { inngest,functions } from "./lib/inngest.js";
-
-
+import { clerkMiddleware } from '@clerk/express'
+import { protectRoute } from "./middleware/protectRoute.js";
+import chatRoutes from "./routes/chatRoutes.js";
 
 const app = express();
 
@@ -21,16 +22,24 @@ app.use(cors(
   }
 ));
 
-app.get("/health", (req, res) => {
-  res.status(200).send("API is working");
-});
-app.get("/books", (req, res) => {
-  res.status(200).send("List of books");
-});
-
+app.use(clerkMiddleware());
 app.use("/api/inngest", serve({
   client:inngest,functions
 }));
+
+app.use("/api/chat",chatRoutes);
+
+app.get("/health", (req, res) => {
+  res.status(200).send("API is working");
+});
+// app.get("/books", (req, res) => {
+//   res.status(200).send("List of books");
+// });
+// app.get("/chat",protectRoute, (req, res) => {
+//   console.log(req.user)
+//   res.status(200).send("This is a protected chat route");
+// });
+
 
 
 if (ENV.NODE_ENV === "production") {
