@@ -11,6 +11,7 @@ import HomePage from "./pages/HomePage";
 import DashboardPage from "./pages/DashboardPage";
 import ProblemsPage from "./pages/ProblemsPage";
 import { Toaster } from "react-hot-toast";
+import ProblemPage from "./pages/ProblemPage";
 
 function App() {
 
@@ -21,6 +22,7 @@ function App() {
      <Route path="/" element={!isSignedIn?<HomePage />:<Navigate to={"/dashboard"}/>} />
       <Route path="/dashboard" element={isSignedIn?<DashboardPage />:<Navigate to={"/"}/>} />
       <Route path="/problems" element={<ProblemsPage />} />
+      <Route path="/problem/:id" element={<ProblemPage />} />
     </Routes>
     <Toaster/>
     </>
