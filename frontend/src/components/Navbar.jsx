@@ -66,7 +66,7 @@ function Navbar() {
             </div>
           </Link>
 
-          <div className="ml-4 mt-2 border-amber-50">
+          <div className="ml-4 mt-2">
             <UserButton />
           </div>
         </div>
