@@ -9,7 +9,7 @@ import { connectDB } from "./lib/db.js";
 import { inngest, functions } from "./lib/inngest.js";
 
 import chatRoutes from "./routes/chatRoutes.js";
-import sessionRoutes from "./routes/sessionRoute.js";
+import sessionRoute from "./routes/sessionRoute.js";
 
 const app = express();
 
@@ -18,12 +18,29 @@ const __dirname = path.resolve();
 // middleware
 app.use(express.json());
 // credentials:true meaning?? => server allows a browser to include cookies on request
-app.use(cors({ origin: ENV.CLIENT_URL, credentials: true }));
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://interviewplatform-g3rob.sevalla.app"
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.log("❌ Blocked by CORS:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 app.use(clerkMiddleware()); // this adds auth field to request object: req.auth()
 
 app.use("/api/inngest", serve({ client: inngest, functions }));
 app.use("/api/chat", chatRoutes);
-app.use("/api/sessions", sessionRoutes);
+app.use("/api/sessions", sessionRoute);
 
 app.get("/health", (req, res) => {
   res.status(200).json({ msg: "api is up and running" });
